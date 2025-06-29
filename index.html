@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Infinite Wordle</title>
+    <!-- Add Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Rubik+Doodle+Shadow&family=Pacifico&family=Bungee+Shade&display=swap" rel="stylesheet">
     <style>
         :root {
             /* Light mode colors */
@@ -52,7 +56,7 @@
             text-align: center;
             background: var(--bg-color);
             color: var(--text-color);
-            height: 100vh;
+            min-height: 100vh;
             display: flex;
             flex-direction: column;
             padding: 10px;
@@ -66,15 +70,19 @@
             margin: 0 auto;
             display: flex;
             flex-direction: column;
-            height: 100%;
+            flex: 1;
             padding: 10px 0;
         }
 
+        /* Playful Shadow Effect */
         h1 {
+            font-family: 'Rubik Doodle Shadow', cursive;
             color: var(--header-color);
             margin-bottom: 5px;
-            font-size: clamp(24px, 5vw, 32px);
+            font-size: clamp(28px, 7vw, 42px);
             transition: color 0.3s;
+            text-shadow: 3px 3px 0px rgba(0,0,0,0.1);
+            letter-spacing: 1px;
         }
 
         .subtitle {
@@ -105,17 +113,19 @@
             display: flex;
             flex-direction: column;
             justify-content: center;
-            max-height: 400px;
+            max-height: 60vh;
+            margin: 10px 0;
         }
 
         #board {
             display: grid;
-            grid-template-rows: repeat(6, minmax(40px, 1fr));
+            grid-template-rows: repeat(6, 1fr);
             grid-gap: 5px;
             margin: 0 auto;
             width: 100%;
-            max-width: 300px;
-            max-height: 360px;
+            max-width: 350px;
+            height: 100%;
+            aspect-ratio: 5/6;
         }
 
         .row {
@@ -125,19 +135,30 @@
         }
 
         .tile {
-            aspect-ratio: 1/1;
-            border: 2px solid var(--tile-border);
-            font-size: clamp(20px, 6vw, 32px);
-            font-weight: bold;
             display: flex;
             justify-content: center;
             align-items: center;
+            border: 2px solid var(--tile-border);
+            font-size: 2rem;
+            font-weight: bold;
             text-transform: uppercase;
             user-select: none;
             transition: 
                 transform 0.2s, 
                 background-color 0.3s, 
                 border-color 0.3s;
+        }
+
+        @media (max-width: 500px) {
+            .tile {
+                font-size: 1.5rem;
+            }
+        }
+
+        @media (max-width: 350px) {
+            .tile {
+                font-size: 1.2rem;
+            }
         }
 
         .tile.flip {
@@ -188,6 +209,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            touch-action: manipulation;
         }
 
         .key.wide {
@@ -283,7 +305,7 @@
         }
 
         #theme-toggle {
-            position: absolute;
+            position: fixed;
             top: 10px;
             right: 10px;
             background: var(--key-bg);
@@ -295,6 +317,7 @@
             cursor: pointer;
             transition: all 0.3s;
             font-size: clamp(12px, 3vw, 14px);
+            z-index: 10;
         }
 
         #theme-toggle:hover {
@@ -497,8 +520,13 @@
                 
                 if (data && data[0]) {
                     correctWord = data[0].toUpperCase();
-                    console.log('Correct word:', correctWord); // For debugging
-                    messageEl.textContent = '';
+                    // Ensure the word is exactly 5 letters (API sometimes returns longer words)
+                    if (correctWord.length === 5) {
+                        console.log('Correct word:', correctWord);
+                        messageEl.textContent = '';
+                    } else {
+                        fallbackWords();
+                    }
                 } else {
                     // Fallback to local words if API fails
                     fallbackWords();
@@ -561,23 +589,10 @@
             }
         }
         
-        // Check if the guess is valid
-        function isValidWord(word) {
-            // In a real app, you'd check against a dictionary API
-            // For this demo, we'll just check it's 5 letters
-            return word.length === 5;
-        }
-        
         // Submit the current guess
         async function submitGuess() {
             if (currentGuess.length !== 5) {
                 showMessage('Word must be 5 letters', 'shake');
-                return;
-            }
-            
-            // Check if word is valid (simplified for demo)
-            if (!isValidWord(currentGuess)) {
-                showMessage('Not in word list', 'shake');
                 return;
             }
             
@@ -638,7 +653,7 @@
         function showAnswer(isWin) {
             answerDisplay.textContent = correctWord;
             if (isWin) {
-                resultMessage.textContent = `You guessed it in ${guesses + 1} ${guesses === 0 ? 'try' : 'tries'}!`;
+                resultMessage.textContent = `Well done! Guessed in ${guesses + 1} ${guesses === 0 ? 'try' : 'tries'}!`;
                 resultMessage.className = 'win';
             } else {
                 resultMessage.textContent = 'Better luck next time!';
@@ -669,6 +684,7 @@
         
         // Update statistics display
         function updateStats() {
+            gamesPlayed++;
             gamesPlayedEl.textContent = gamesPlayed;
             gamesWonEl.textContent = gamesWon;
             currentStreakEl.textContent = currentStreak;
@@ -692,7 +708,6 @@
         });
         
         resetBtn.addEventListener('click', () => {
-            gamesPlayed++;
             updateStats();
             init();
         });
