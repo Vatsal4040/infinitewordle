@@ -658,4 +658,114 @@
                         updateKey(letter, 'correct');
                     } else if (correctWord.includes(letter)) {
                         setTimeout(() => {
-              
+                            tile.classList.add('present');
+                        }, 250);
+                        updateKey(letter, 'present');
+                    } else {
+                        setTimeout(() => {
+                            tile.classList.add('absent');
+                        }, 250);
+                        updateKey(letter, 'absent');
+                    }
+                }, delay);
+            }
+            
+            // Check for win
+            if (correctCount === 5) {
+                gamesWon++;
+                currentStreak++;
+                if (currentStreak > maxStreak) maxStreak = currentStreak;
+                guessDistribution[guesses]++;
+                
+                setTimeout(() => {
+                    showAnswer(true);
+                    gameOver = true;
+                    updateStats();
+                }, 1800);
+            } 
+            // Check for loss
+            else if (guesses === 5) {
+                setTimeout(() => {
+                    showAnswer(false);
+                    currentStreak = 0;
+                    gameOver = true;
+                    updateStats();
+                }, 1800);
+            }
+            
+            guesses++;
+            currentGuess = '';
+        }
+        
+        // Show answer in big font
+        function showAnswer(isWin) {
+            answerDisplay.textContent = correctWord;
+            if (isWin) {
+                resultMessage.textContent = `WELL DONE! Guessed in ${guesses} ${guesses === 1 ? 'try' : 'tries'}!`;
+                resultMessage.className = 'win';
+            } else {
+                resultMessage.textContent = 'Better luck next time!';
+                resultMessage.className = 'lose';
+            }
+        }
+        
+        // Update keyboard key colors
+        function updateKey(key, status) {
+            keys.forEach(k => {
+                if (k.dataset.key === key) {
+                    if (k.classList.contains('correct')) return;
+                    if (k.classList.contains('present') && status === 'absent') return;
+                    
+                    k.classList.remove('correct', 'present', 'absent');
+                    k.classList.add(status);
+                }
+            });
+        }
+        
+        // Show message with animation
+        function showMessage(msg, type) {
+            messageEl.textContent = msg;
+            messageEl.className = type || '';
+        }
+        
+        // Update statistics display
+        function updateStats() {
+            gamesPlayedEl.textContent = gamesPlayed;
+            gamesWonEl.textContent = gamesWon;
+            currentStreakEl.textContent = currentStreak;
+        }
+        
+        // Event listeners
+        keys.forEach(key => {
+            key.addEventListener('click', () => {
+                handleKeyPress(key.dataset.key);
+            });
+        });
+        
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                handleKeyPress('ENTER');
+            } else if (e.key === 'Backspace') {
+                handleKeyPress('BACKSPACE');
+            } else if (/^[a-zA-Z]$/.test(e.key)) {
+                handleKeyPress(e.key.toUpperCase());
+            }
+        });
+        
+        title.addEventListener('click', () => {
+            gamesPlayed++;
+            updateStats();
+            init();
+        });
+        
+        newGameBtn.addEventListener('click', () => {
+            gamesPlayed++;
+            updateStats();
+            init();
+        });
+        
+        // Start the game
+        init();
+    </script>
+</body>
+</html>
